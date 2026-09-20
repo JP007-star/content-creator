@@ -202,7 +202,12 @@ st.markdown("""
 # Header Section
 col_logo, col_title = st.columns([1, 4])
 with col_logo:
-    st.image("assets/jp.png", width=120)
+    import os
+    img_path = os.path.join("assets", "jp.png")
+    if os.path.exists(img_path):
+        st.image(img_path, width=120)
+    else:
+        st.warning("Logo not found")
 
 with col_title:
     st.title("🎬 Content Creating Studio")
@@ -212,7 +217,11 @@ with col_title:
 st.markdown("---")
 col_brand_l, col_brand_m, col_brand_r = st.columns([2, 1, 2])
 with col_brand_m:
-    st.image("assets/director.png", width=150)
+    director_path = os.path.join("assets", "director.png")
+    if os.path.exists(director_path):
+        st.image(director_path, width=150)
+    else:
+        st.warning("Director image not found")
     st.markdown("<p style='text-align: center;'><b>Studio Director</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
