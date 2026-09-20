@@ -151,7 +151,7 @@ def create_video_production(image_path, audio_path, output_path):
 # --- UI OVERHAUL ---
 st.set_page_config(page_title="Content Creating Studio", layout="wide", page_icon="🎬")
 
-st.markdown("""
+st.markdown('''
     <style>
     /* General Theme */
     .main { background-color: #0e1117; color: #ffffff; font-family: 'Inter', sans-serif; }
@@ -233,6 +233,12 @@ st.markdown("""
         transition: width 0.5s ease-in-out;
     }
 
+    /* Headers */
+    h1, h2, h3 { color: #ff4b4b !important; font-weight: 700 !important; }
+    .step-title { font-size: 1.4rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    </style>
+''', unsafe_allow_html=True)
+
 # --- HEADER SECTION ---
 with st.container():
     st.markdown('<div class="studio-header">', unsafe_allow_html=True)
@@ -248,6 +254,9 @@ with st.container():
     st.markdown('</div>', unsafe_allow_html=True)
 
     # --- PROGRESS ROADMAP ---
+    if 'step' not in st.session_state:
+        st.session_state.step = 1
+
     progress_percent = (st.session_state.step - 1) * 33.33
     st.markdown(f'''
         <div style="text-align: center; margin-bottom: 10px;">
@@ -260,7 +269,6 @@ with st.container():
     st.markdown("<div style='text-align: center; margin-bottom: 30px;'>", unsafe_allow_html=True)
     cols_road = st.columns(4)
 
-    # Dynamic colors based on current step
     def get_color(step_num):
         if st.session_state.step > step_num: return "🟢"
         if st.session_state.step == step_num: return "🔵"
@@ -273,10 +281,6 @@ with st.container():
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- MAIN WORKFLOW ---
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-
-# Step 1: Import
 if st.session_state.step == 1:
     st.markdown('<div class="step-card">', unsafe_allow_html=True)
     st.markdown('<div class="step-title">📁 Step 1: Import Source Asset</div>', unsafe_allow_html=True)
@@ -318,7 +322,6 @@ if st.session_state.step == 1:
         st.info("Please upload an image to begin the workflow.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Step 2: Script
 elif st.session_state.step == 2:
     st.markdown('<div class="step-card">', unsafe_allow_html=True)
     st.markdown('<div class="step-title">✍️ Step 2: Refine Voice-Over Script</div>', unsafe_allow_html=True)
@@ -345,7 +348,6 @@ elif st.session_state.step == 2:
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Step 3: Voice
 elif st.session_state.step == 3:
     st.markdown('<div class="step-card">', unsafe_allow_html=True)
     st.markdown('<div class="step-title">🎙️ Step 3: Voice & Tone Design</div>', unsafe_allow_html=True)
@@ -371,7 +373,6 @@ elif st.session_state.step == 3:
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Step 4: Render
 elif st.session_state.step == 4:
     st.markdown('<div class="step-card">', unsafe_allow_html=True)
     st.markdown('<div class="step-title">🚀 Step 4: Produce Final Video</div>', unsafe_allow_html=True)
