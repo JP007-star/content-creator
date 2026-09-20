@@ -6,5 +6,5 @@ pandas
 python-dotenv
 Pillow
 numpy
-opencv-python
+opencv-python-headless
 requests
