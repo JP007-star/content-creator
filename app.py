@@ -239,6 +239,7 @@ with st.container():
     col_logo, col_title, col_director = st.columns([1, 3, 1])
     with col_logo:
         st.image("assets/jp.png", width=80)
+        st.markdown("<p style='text-align: center; font-size: 0.8rem; color: #a0a0a0; margin-top: -10px;'>Director</p>", unsafe_allow_html=True)
     with col_title:
         st.markdown("<h1 style='text-align: center; margin: 0;'>🎬 Content Creating Studio</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #a0a0a0;'>Transform your images into professional educational reels in seconds.</p>", unsafe_allow_html=True)
