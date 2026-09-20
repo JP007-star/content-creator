@@ -140,9 +140,20 @@ def create_video_production(image_path, audio_path, output_path):
                 video = image_clip
                 video.audio = audio_clip
 
-        # Optimization: Use faster preset and lower bitrate if necessary
-        # MoviePy's write_videofile can be slow. preset='ultrafast' helps significantly.
-        video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", logger=None, preset="ultrafast", threads=4)
+        # Further Optimization:
+        # 1. Reduce fps to 12 or 15 if it's just a static image (24 is overkill for a still photo)
+        # 2. Use a very low bitrate for static content
+        # 3. Use 'ultrafast' and a simplified codec profile
+        video.write_videofile(
+            output_path,
+            fps=12,
+            codec="libx264",
+            audio_codec="aac",
+            logger=None,
+            preset="ultrafast",
+            threads=4,
+            bitrate="1000k"
+        )
         audio_clip.close()
         image_clip.close()
         return True
