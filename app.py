@@ -161,89 +161,98 @@ st.markdown("""
         overflow-y: auto !important;
     }
     .main .block-container {
-        padding-top: 2rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 5rem !important;
     }
 
     /* Step Card Styling */
     .step-card {
         background-color: #1e2130;
-        padding: 20px;
-        border-radius: 15px;
+        padding: 25px;
+        border-radius: 20px;
         border: 1px solid #3e445e;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Custom Header Styling */
+    .studio-header {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(180deg, #1e2130 0%, #0e1117 100%);
+        border-radius: 0 0 30px 30px;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #ff4b4b;
     }
 
     /* Buttons */
     .stButton>button {
         width: 100%;
-        border-radius: 10px;
+        border-radius: 12px;
         height: 3em;
         background: linear-gradient(45deg, #ff4b4b, #ff8e8e);
         color: white;
         font-weight: bold;
         border: none;
         transition: 0.3s;
+        font-size: 1.1rem;
     }
     .stButton>button:hover {
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(255,75,75,0.4);
+        background: linear-gradient(45deg, #ff6b6b, #ffa8a8);
     }
 
     /* Inputs */
-    .stTextArea textarea { background-color: #0e1117 !important; color: #ffffff !important; border: 1px solid #3e445e !important; border-radius: 10px !important; }
-    .stSelectbox div[data-baseweb="select"] { background-color: #0e1117 !important; color: #ffffff !important; border: 1px solid #3e445e !important; border-radius: 10px !important; }
+    .stTextArea textarea { background-color: #0e1117 !important; color: #ffffff !important; border: 1px solid #3e445e !important; border-radius: 12px !important; }
+    .stSelectbox div[data-baseweb="select"] { background-color: #0e1117 !important; color: #ffffff !important; border: 1px solid #3e445e !important; border-radius: 12px !important; }
 
     /* Headers */
-    h1, h2, h3 { color: #ff4b4b !important; }
+    h1, h2, h3 { color: #ff4b4b !important; font-weight: 700 !important; }
+    .step-title { font-size: 1.4rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
-# Header Section
-col_logo, col_title = st.columns([1, 4])
-with col_logo:
-    import os
-    img_path = os.path.join("assets", "jp.png")
-    if os.path.exists(img_path):
-        st.image(img_path, width=120)
-    else:
-        st.warning("Logo not found")
+# --- HEADER SECTION ---
+with st.container():
+    st.markdown('<div class="studio-header">', unsafe_allow_html=True)
+    col_logo, col_title, col_director = st.columns([1, 3, 1])
+    with col_logo:
+        st.image("assets/jp.png", width=80)
+    with col_title:
+        st.markdown("<h1 style='text-align: center; margin: 0;'>🎬 Content Creating Studio</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #a0a0a0;'>Transform your images into professional educational reels in seconds.</p>", unsafe_allow_html=True)
+    with col_director:
+        st.image("assets/director.png", width=80)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with col_title:
-    st.title("🎬 Content Creating Studio")
-    st.markdown("#### Transform your images into professional educational reels in seconds.")
-
-# PERSONAL BRANDING SECTION
-st.markdown("---")
-col_brand_l, col_brand_m, col_brand_r = st.columns([2, 1, 2])
-with col_brand_m:
-    director_path = os.path.join("assets", "director.png")
-    if os.path.exists(director_path):
-        st.image(director_path, width=150)
-    else:
-        st.warning("Director image not found")
-    st.markdown("<p style='text-align: center;'><b>Studio Director</b></p>", unsafe_allow_html=True)
-st.markdown("---")
-
-# PROGRESS ROADMAP
-st.markdown("---")
+# --- PROGRESS ROADMAP ---
+st.markdown("<div style='text-align: center; margin-bottom: 30px;'>", unsafe_allow_html=True)
 cols_road = st.columns(4)
 with cols_road[0]: st.markdown("🟢 **1. Import**")
 with cols_road[1]: st.markdown("⚪ **2. Script**")
 with cols_road[2]: st.markdown("⚪ **3. Voice**")
 with cols_road[3]: st.markdown("⚪ **4. Render**")
-st.markdown("---")
+st.markdown("</div>", unsafe_allow_html=True)
 
-# Main Workflow
-col_left, col_right = st.columns([1.2, 1])
+# --- MAIN WORKFLOW ---
+if 'step' not in st.session_state:
+    st.session_state.step = 1
 
-with col_left:
-    # STEP 1: IMPORT
-    st.markdown("### 📁 Step 1: Import Asset")
-    with st.container():
-        uploaded_file = st.file_uploader("Upload Source Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-        if uploaded_file:
-            st.image(uploaded_file, caption="Source Asset", use_container_width=True)
+# Step 1: Import
+if st.session_state.step == 1:
+    st.markdown('<div class="step-card">', unsafe_allow_html=True)
+    st.markdown('<div class="step-title">📁 Step 1: Import Source Asset</div>', unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader("Upload an image (JPG, PNG)", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+
+    if uploaded_file:
+        st.session_state.uploaded_file = uploaded_file
+        col_img, col_action = st.columns([1, 1])
+        with col_img:
+            st.image(uploaded_file, caption="Preview Asset", use_container_width=True)
+        with col_action:
+            st.markdown("### ⚙️ Image Processing")
             if st.button("✨ Extract Text from Image"):
                 with st.status("Analyzing Image...", expanded=True) as status:
                     image_bytes = uploaded_file.getvalue()
@@ -254,34 +263,84 @@ with col_left:
                         st.session_state['extracted_text'] = extracted
                         status.update(label="Text Extracted!", state="complete", expanded=False)
 
-    # STEP 2: SCRIPT
-    st.markdown("### ✍️ Step 2: Refine Script")
+            if 'extracted_text' in st.session_state and st.session_state['extracted_text']:
+                st.success("Text extracted successfully!")
+                if st.button("Next: Refine Script ➡️"):
+                    st.session_state.step = 2
+                    st.rerun()
+    else:
+        st.info("Please upload an image to begin the workflow.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Step 2: Script
+elif st.session_state.step == 2:
+    st.markdown('<div class="step-card">', unsafe_allow_html=True)
+    st.markdown('<div class="step-title">✍️ Step 2: Refine Voice-Over Script</div>', unsafe_allow_html=True)
+
     if 'extracted_text' not in st.session_state:
         st.session_state['extracted_text'] = ""
 
     script_text = st.text_area(
-        "Edit your voice-over script here:",
+        "Edit your script to make it engaging:",
         value=st.session_state['extracted_text'],
         height=300,
         label_visibility="collapsed"
     )
 
-with col_right:
-    # STEP 3: VOICE
-    st.markdown("### 🎙️ Step 3: Voice Design")
-    with st.container():
+    col_prev, col_next = st.columns([1, 1])
+    with col_prev:
+        if st.button("⬅️ Back to Import"):
+            st.session_state.step = 1
+            st.rerun()
+    with col_next:
+        if st.button("Next: Voice Design ➡️"):
+            st.session_state.script_text = script_text
+            st.session_state.step = 3
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Step 3: Voice
+elif st.session_state.step == 3:
+    st.markdown('<div class="step-card">', unsafe_allow_html=True)
+    st.markdown('<div class="step-title">🎙️ Step 3: Voice & Tone Design</div>', unsafe_allow_html=True)
+
+    col_v, col_s = st.columns(2)
+    with col_v:
         voice_choice = st.selectbox("Select Voice Persona", options=list(VOICE_MAPPINGS.keys()))
+    with col_s:
         speed_choice = st.selectbox("Select Speech Rate", options=list(SPEED_MAP.keys()), index=3)
 
-        st.info("💡 **Pro Tip:** Use 'English India Female' for a natural, friendly educational tone.")
+    st.info("💡 **Pro Tip:** Use 'English India Female' for a natural, friendly educational tone.")
 
-    st.markdown("---")
+    col_prev, col_next = st.columns([1, 1])
+    with col_prev:
+        if st.button("⬅️ Back to Script"):
+            st.session_state.step = 2
+            st.rerun()
+    with col_next:
+        if st.button("Next: Final Render ➡️"):
+            st.session_state.voice_choice = voice_choice
+            st.session_state.speed_choice = speed_choice
+            st.session_state.step = 4
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # STEP 4: RENDER
-    st.markdown("### 🚀 Step 4: Produce Video")
-    if st.button("🎬 Render Final MP4", type="primary"):
-        if not uploaded_file or not script_text:
-            st.warning("Please provide both an image and a script!")
+# Step 4: Render
+elif st.session_state.step == 4:
+    st.markdown('<div class="step-card">', unsafe_allow_html=True)
+    st.markdown('<div class="step-title">🚀 Step 4: Produce Final Video</div>', unsafe_allow_html=True)
+
+    st.markdown("### 📋 Final Review")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(f"**Voice:** {st.session_state.get('voice_choice')}")
+        st.markdown(f"**Speed:** {st.session_state.get('speed_choice')}")
+    with c2:
+        st.markdown(f"**Script Preview:** {st.session_state.get('script_text', '')[:100]}...")
+
+    if st.button("🎬 Start Production", type="primary"):
+        if 'uploaded_file' not in st.session_state:
+            st.error("Asset missing! Please go back to Step 1.")
         else:
             with tempfile.TemporaryDirectory() as tmpdir:
                 try:
@@ -290,14 +349,13 @@ with col_right:
                         temp_audio_path = os.path.join(tmpdir, "voice.mp3")
                         temp_video_path = os.path.join(tmpdir, "output.mp4")
 
-                        status.write("📦 Packaging assets...")
                         with open(temp_img_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
+                            f.write(st.session_state.uploaded_file.getbuffer())
 
                         status.write("🎙️ Synthesizing neural voice...")
-                        voice_id = VOICE_MAPPINGS[voice_choice]
-                        rate = SPEED_MAP[speed_choice]
-                        asyncio.run(generate_voiceover_async(script_text, voice_id, rate, temp_audio_path))
+                        voice_id = VOICE_MAPPINGS[st.session_state.voice_choice]
+                        rate = SPEED_MAP[st.session_state.speed_choice]
+                        asyncio.run(generate_voiceover_async(st.session_state.script_text, voice_id, rate, temp_audio_path))
 
                         status.write("🎞️ Assembling 9:16 Reel...")
                         success = create_video_production(temp_img_path, temp_audio_path, temp_video_path)
@@ -308,9 +366,20 @@ with col_right:
                             with open(temp_video_path, "rb") as f:
                                 video_bytes = f.read()
                             st.video(video_bytes)
-                            st.download_button("📥 Download Final MP4", data=video_bytes, file_name="inner_child_reel.mp4", mime="video/mp4")
+                            st.download_button("📥 Download Final MP4", data=video_bytes, file_name="content_studio_reel.mp4", mime="video/mp4")
                 except Exception as e:
                     st.error(f"Pipeline Error: {e}")
+
+    col_prev, col_reset = st.columns([1, 1])
+    with col_prev:
+        if st.button("⬅️ Back to Voice"):
+            st.session_state.step = 3
+            st.rerun()
+    with col_reset:
+        if st.button("♻️ Start Over"):
+            st.session_state.step = 1
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.divider()
 st.caption("Content Creating Studio v1.1 | Hybrid OCR | Neural TTS | Auto-Assemble")
