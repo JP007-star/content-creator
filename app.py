@@ -140,7 +140,9 @@ def create_video_production(image_path, audio_path, output_path):
                 video = image_clip
                 video.audio = audio_clip
 
-        video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", logger=None)
+        # Optimization: Use faster preset and lower bitrate if necessary
+        # MoviePy's write_videofile can be slow. preset='ultrafast' helps significantly.
+        video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", logger=None, preset="ultrafast", threads=4)
         audio_clip.close()
         image_clip.close()
         return True
