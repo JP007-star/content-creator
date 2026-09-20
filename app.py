@@ -156,6 +156,16 @@ st.markdown("""
     /* General Theme */
     .main { background-color: #0e1117; color: #ffffff; font-family: 'Inter', sans-serif; }
 
+    /* Mobile Friendly adjustments */
+    @media (max-width: 768px) {
+        .studio-header { padding: 10px !important; }
+        .studio-header h1 { font-size: 1.5rem !important; }
+        .step-card { padding: 15px !important; }
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+        }
+    }
+
     /* Fix scrolling and overflow issues */
     [data-testid="stAppViewContainer"] {
         overflow-y: auto !important;
@@ -207,11 +217,21 @@ st.markdown("""
     .stTextArea textarea { background-color: #0e1117 !important; color: #ffffff !important; border: 1px solid #3e445e !important; border-radius: 12px !important; }
     .stSelectbox div[data-baseweb="select"] { background-color: #0e1117 !important; color: #ffffff !important; border: 1px solid #3e445e !important; border-radius: 12px !important; }
 
-    /* Headers */
-    h1, h2, h3 { color: #ff4b4b !important; font-weight: 700 !important; }
-    .step-title { font-size: 1.4rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-    </style>
-""", unsafe_allow_html=True)
+    /* Progress Bar Styling */
+    .progress-container {
+        width: 100%;
+        background-color: #1e2130;
+        border-radius: 10px;
+        height: 12px;
+        margin: 20px 0 30px 0;
+        border: 1px solid #3e445e;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ff4b4b, #ff8e8e);
+        transition: width 0.5s ease-in-out;
+    }
 
 # --- HEADER SECTION ---
 with st.container():
@@ -226,14 +246,30 @@ with st.container():
         st.image("assets/director.png", width=80)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- PROGRESS ROADMAP ---
-st.markdown("<div style='text-align: center; margin-bottom: 30px;'>", unsafe_allow_html=True)
-cols_road = st.columns(4)
-with cols_road[0]: st.markdown("🟢 **1. Import**")
-with cols_road[1]: st.markdown("⚪ **2. Script**")
-with cols_road[2]: st.markdown("⚪ **3. Voice**")
-with cols_road[3]: st.markdown("⚪ **4. Render**")
-st.markdown("</div>", unsafe_allow_html=True)
+    # --- PROGRESS ROADMAP ---
+    progress_percent = (st.session_state.step - 1) * 33.33
+    st.markdown(f"""
+        <div style='text-align: center; margin-bottom: 10px;'>
+            <div class="progress-container">
+                <div class="progress-fill" style="width: {progress_percent}%;"></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div style='text-align: center; margin-bottom: 30px;'>", unsafe_allow_html=True)
+    cols_road = st.columns(4)
+
+    # Dynamic colors based on current step
+    def get_color(step_num):
+        if st.session_state.step > step_num: return "🟢"
+        if st.session_state.step == step_num: return "🔵"
+        return "⚪"
+
+    with cols_road[0]: st.markdown(f"{get_color(1)} **1. Import**")
+    with cols_road[1]: st.markdown(f"{get_color(2)} **2. Script**")
+    with cols_road[2]: st.markdown(f"{get_color(3)} **3. Voice**")
+    with cols_road[3]: st.markdown(f"{get_color(4)} **4. Render**")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- MAIN WORKFLOW ---
 if 'step' not in st.session_state:
@@ -250,18 +286,27 @@ if st.session_state.step == 1:
         st.session_state.uploaded_file = uploaded_file
         col_img, col_action = st.columns([1, 1])
         with col_img:
-            st.image(uploaded_file, caption="Preview Asset", use_container_width=True)
+            st.image(uploaded_file, caption="Preview Asset", width=300)
         with col_action:
             st.markdown("### ⚙️ Image Processing")
-            if st.button("✨ Extract Text from Image"):
-                with st.status("Analyzing Image...", expanded=True) as status:
-                    image_bytes = uploaded_file.getvalue()
-                    extracted = extract_text_from_image_cached(image_bytes)
-                    if "OCR Error" in extracted or "API Error" in extracted:
-                        st.error(extracted)
-                    else:
-                        st.session_state['extracted_text'] = extracted
-                        status.update(label="Text Extracted!", state="complete", expanded=False)
+
+            col_extract, col_skip = st.columns(2)
+            with col_extract:
+                if st.button("✨ Extract Text from Image"):
+                    with st.status("Analyzing Image...", expanded=True) as status:
+                        image_bytes = uploaded_file.getvalue()
+                        extracted = extract_text_from_image_cached(image_bytes)
+                        if "OCR Error" in extracted or "API Error" in extracted:
+                            st.error(extracted)
+                        else:
+                            st.session_state['extracted_text'] = extracted
+                            status.update(label="Text Extracted!", state="complete", expanded=False)
+
+            with col_skip:
+                if st.button("Skip to Script ➡️"):
+                    st.session_state['extracted_text'] = ""
+                    st.session_state.step = 2
+                    st.rerun()
 
             if 'extracted_text' in st.session_state and st.session_state['extracted_text']:
                 st.success("Text extracted successfully!")
