@@ -1,0 +1,10 @@
+streamlit
+edge-tts
+pytesseract
+moviepy
+pandas
+python-dotenv
+Pillow
+numpy
+opencv-python
+requests
