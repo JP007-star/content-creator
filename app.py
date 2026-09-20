@@ -202,7 +202,7 @@ st.markdown("""
 # Header Section
 col_logo, col_title = st.columns([1, 4])
 with col_logo:
-    st.image(r"C:\Users\justi\Downloads\jp.png", width=120)
+    st.image("assets/jp.png", width=120)
 
 with col_title:
     st.title("🎬 Content Creating Studio")
@@ -212,7 +212,7 @@ with col_title:
 st.markdown("---")
 col_brand_l, col_brand_m, col_brand_r = st.columns([2, 1, 2])
 with col_brand_m:
-    st.image(r"C:\Users\justi\Downloads\1000041645.png", width=150)
+    st.image("assets/director.png", width=150)
     st.markdown("<p style='text-align: center;'><b>Studio Director</b></p>", unsafe_allow_html=True)
 st.markdown("---")
 
