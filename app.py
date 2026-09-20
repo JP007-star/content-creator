@@ -249,13 +249,13 @@ with st.container():
 
     # --- PROGRESS ROADMAP ---
     progress_percent = (st.session_state.step - 1) * 33.33
-    st.markdown(f"""
-        <div style='text-align: center; margin-bottom: 10px;'>
+    st.markdown(f'''
+        <div style="text-align: center; margin-bottom: 10px;">
             <div class="progress-container">
                 <div class="progress-fill" style="width: {progress_percent}%;"></div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
     st.markdown("<div style='text-align: center; margin-bottom: 30px;'>", unsafe_allow_html=True)
     cols_road = st.columns(4)
