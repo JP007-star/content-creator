@@ -401,21 +401,26 @@ elif st.session_state.step == 4:
                         with open(temp_img_path, "wb") as f:
                             f.write(st.session_state.uploaded_file.getbuffer())
 
-                        status.write("🎙️ Synthesizing neural voice...")
+                        status.write("🎙️ **Step 1/3:** Synthesizing neural voice...")
                         voice_id = VOICE_MAPPINGS[st.session_state.voice_choice]
                         rate = SPEED_MAP[st.session_state.speed_choice]
                         asyncio.run(generate_voiceover_async(st.session_state.script_text, voice_id, rate, temp_audio_path))
+                        status.write("✅ Voice-over generated.")
 
-                        status.write("🎞️ Assembling 9:16 Reel...")
+                        status.write("🎞️ **Step 2/3:** Assembling 9:16 Reel...")
+                        status.write("⏳ Encoding video frames (this may take a moment)...")
                         success = create_video_production(temp_img_path, temp_audio_path, temp_video_path)
 
                         if success:
+                            status.write("✨ **Step 3/3:** Finalizing production...")
                             status.update(label="Production Complete!", state="complete", expanded=False)
                             st.balloons()
                             with open(temp_video_path, "rb") as f:
                                 video_bytes = f.read()
                             st.video(video_bytes)
                             st.download_button("📥 Download Final MP4", data=video_bytes, file_name="content_studio_reel.mp4", mime="video/mp4")
+                        else:
+                            status.update(label="Production Failed", state="error", expanded=True)
                 except Exception as e:
                     st.error(f"Pipeline Error: {e}")
 
