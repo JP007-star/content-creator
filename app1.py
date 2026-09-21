@@ -7,6 +7,7 @@ import shutil
 import tempfile
 import pandas as pd
 import requests
+import io
 from openai import OpenAI
 from dotenv import load_dotenv
 from PIL import Image
@@ -86,7 +87,6 @@ def ocr_via_api(image_bytes):
     except Exception as e:
         return f"API Fallback Error: {str(e)}"
 
-@st.cache_data(show_spinner=False)
 def extract_text_from_image_cached(image_bytes):
     if TESSERACT_EXE:
         try:
@@ -100,6 +100,69 @@ def extract_text_from_image_cached(image_bytes):
         except Exception:
             pass
     return ocr_via_api(image_bytes)
+
+def generate_ai_image(model_choice, topic):
+    """
+    Generates an AI image based on the chosen model and topic.
+    Returns: (type, value) where type is 'url' or 'path'.
+    """
+    base_prompt = (
+        f"A professional, minimalist, high-resolution educational background for {topic}. "
+        "No text, no words, no letters. Clean vector art, deep dark theme, futuristic UI elements, "
+        "centered empty space for text overlay, 9:16 aspect ratio, 8k, cinematic lighting, high contrast"
+    )
+
+    try:
+        if model_choice == "DALL-E 3":
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                return None, "Error: OpenAI API Key missing in .env"
+
+            client = OpenAI(api_key=api_key)
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=base_prompt,
+                size="1024x1792",
+                quality="standard",
+                n=1,
+            )
+            return "url", response.data[0].url
+
+        elif model_choice == "Gemini":
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                return None, "Error: Google API Key missing in .env"
+
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_images(
+                model="imagen-3.0-generate-001",
+                prompt=base_prompt,
+                config={"number_of_images": 1}
+            )
+
+            # Gemini returns bytes. Save to a local file.
+            img_bytes = response.generated_images[0].image._image_bytes
+
+            # Use a stable filename in a temporary directory or assets folder
+            assets_dir = "assets"
+            os.makedirs(assets_dir, exist_ok=True)
+            file_path = os.path.join(assets_dir, "ai_gen_background.png")
+
+            with open(file_path, "wb") as f:
+                f.write(img_bytes)
+
+            return "path", file_path
+
+        elif model_choice == "Pollinations (Free)":
+            seed = np.random.randint(1, 1000000)
+            # Pollinations uses a slightly different prompt style for flux
+            poll_prompt = base_prompt.replace(" A professional", "Minimalist professional")
+            url = f"https://image.pollinations.ai/prompt/{poll_prompt}?width=1080&height=1920&model=flux&seed={seed}"
+            return "url", url
+
+        return None, "Error: Unsupported model choice"
+    except Exception as e:
+        return None, f"Generation Error: {str(e)}"
 
 async def generate_voiceover_async(text, voice_id, rate, output_path):
     communicate = edge_tts.Communicate(text, voice_id, rate=rate)
@@ -464,41 +527,38 @@ elif st.session_state.step == 1:
     elif mode == "Infographic":
         st.markdown('<div class="step-title">💡 Step 1: Define Concept</div>', unsafe_allow_html=True)
         topic = st.text_input("Enter the topic or title for your infographic:", placeholder="e.g. How Python Lists Work")
+
         if topic:
             st.session_state.topic = topic
+
+            # Model Selection Feature
+            model_choice = st.selectbox(
+                "Select Image Generation Model",
+                options=["DALL-E 3", "Gemini", "Pollinations (Free)"],
+                index=0,
+                help="Choose the AI provider for your background visual."
+            )
+
             if st.button("✨ Generate AI Infographic Background"):
                 with st.status("Creating AI Visual...", expanded=True) as status:
-                    # Try DALL-E 3 via OpenAI API first
-                    api_key = os.getenv("OPENAI_API_KEY")
-                    if api_key:
-                        try:
-                            status.write("🎨 Generating high-fidelity image with DALL-E 3...")
-                            client = OpenAI(api_key=api_key)
-                            response = client.images.generate(
-                                model="dall-e-3",
-                                prompt=f"A professional, minimalist, high-resolution educational background for {topic}. No text, no words, no letters. Clean vector art, deep dark theme, futuristic UI elements, centered empty space for text overlay, 9:16 aspect ratio, 8k, cinematic lighting, high contrast",
-                                size="1024x1792", # Vertical aspect ratio
-                                quality="standard",
-                                n=1,
-                            )
-                            image_url = response.data[0].url
-                            st.image(image_url, caption="DALL-E 3 Generated Background", width=300)
-                            st.session_state.asset_url = image_url
-                            status.update(label="DALL-E 3 Visual Generated!", state="complete", expanded=False)
-                        except Exception as e:
-                            st.warning(f"DALL-E 3 failed: {e}. Falling back to Pollinations...")
+                    status.write(f"🎨 Generating visual using {model_choice}...")
 
-                    # Fallback to Pollinations if OpenAI fails or key is missing
-                    if 'asset_url' not in st.session_state:
-                        status.write("🚀 Using Pollinations AI fallback...")
-                        prompt = f"Minimalist professional educational background for {topic}, no text, no letters, no words, clean vector art, deep dark theme, futuristic UI elements, blurred centers, centered empty space for text overlay, high resolution, 9:16 aspect ratio, 8k, cinematic lighting, high contrast"
-                        seed = np.random.randint(1, 1000000)
-                        image_url = f"https://image.pollinations.ai/prompt/{prompt}?width=1080&height=1920&model=flux&seed={seed}"
-                        st.image(image_url, caption="AI Generated Background (Clean)", width=300)
-                        st.session_state.asset_url = image_url
-                        status.update(label="Visual Generated!", state="complete", expanded=False)
+                    asset_type, result = generate_ai_image(model_choice, topic)
 
-            if 'asset_url' in st.session_state:
+                    if asset_type is None:
+                        st.error(result)
+                        status.update(label="Generation Failed", state="error")
+                    else:
+                        if asset_type == "url":
+                            st.session_state.asset_url = result
+                            st.image(result, caption=f"{model_choice} Generated Background", width=300)
+                        else:
+                            st.session_state.asset_path = result
+                            st.image(result, caption=f"{model_choice} Generated Background", width=300)
+
+                        status.update(label=f"{model_choice} Visual Generated!", state="complete", expanded=False)
+
+            if ('asset_url' in st.session_state or 'asset_path' in st.session_state):
                 if st.button("Next: Refine Script ➡️"):
                     # Generate a professional script based on the topic
                     st.session_state['extracted_text'] = f"Let's dive into {topic}! Understanding this concept is key to mastering the field. In this short guide, we'll break down the essentials, look at a real-world example, and see why it matters for your workflow. Let's get started!"
@@ -619,11 +679,17 @@ elif st.session_state.step == 4:
                                 f.write(st.session_state.uploaded_file.getbuffer())
                             asset_path = temp_img_path
                         elif st.session_state.production_mode == "Infographic":
-                            # Download AI image from URL to temp path
-                            img_data = requests.get(st.session_state.asset_url).content
-                            with open(temp_img_path, "wb") as f:
-                                f.write(img_data)
-                            asset_path = temp_img_path
+                            # Handle both local path (Gemini) and URL (DALL-E/Pollinations)
+                            if 'asset_path' in st.session_state and os.path.exists(st.session_state.asset_path):
+                                asset_path = st.session_state.asset_path
+                            elif 'asset_url' in st.session_state:
+                                img_data = requests.get(st.session_state.asset_url).content
+                                with open(temp_img_path, "wb") as f:
+                                    f.write(img_data)
+                                asset_path = temp_img_path
+                            else:
+                                st.error("AI Asset missing! Please go back to Step 1.")
+                                st.stop()
                         elif st.session_state.production_mode == "Cinematic":
                             # Use the generated AI video path
                             asset_path = st.session_state.asset_path

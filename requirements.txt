@@ -10,3 +10,4 @@ pytesseract
 moviepy
 requests
 pandas
+google-genai
