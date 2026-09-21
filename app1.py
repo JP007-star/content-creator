@@ -208,10 +208,18 @@ def create_video_production(asset_path, audio_path, output_path):
 
         # Crop the center to exactly 1080x1920
         try:
+            # Ensure we are using the latest dimensions after resize
             curr_w, curr_h = clip.size
-            x1 = (curr_w - target_w) // 2
-            y1 = (curr_h - target_h) // 2
+
+            # Calculate the crop area to center the image
+            # x1, y1 is the top-left corner of the crop
+            x1 = max(0, (curr_w - target_w) // 2)
+            y1 = max(0, (curr_h - target_h) // 2)
+
             if hasattr(clip, 'crop'):
+                # MoviePy crop: x1, y1, x2, y2 (or width/height depending on version)
+                # For v2.0+, it usually takes x1, y1, width, height or x1, y1, x2, y2
+                # We'll use the absolute coordinates for clarity
                 clip = clip.crop(x1=x1, y1=y1, x2=x1 + target_w, y2=y1 + target_h)
         except Exception:
             pass
