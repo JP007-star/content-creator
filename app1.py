@@ -130,19 +130,26 @@ def create_video_production(asset_path, audio_path, output_path):
                 clip.duration = audio_clip.duration
 
         # Standardize to 9:16 (1080x1920)
+        # We use "fill" logic: resize to cover the 1080x1920 area, then crop the center
+        target_w, target_h = 1080, 1920
+
         try:
+            # Calculate scale to cover target dimensions (aspect fill)
+            scale = max(target_w / clip.w, target_h / clip.h)
             if hasattr(clip, 'resized'):
-                clip = clip.resized(height=1920)
+                clip = clip.resized(width=int(clip.w * scale), height=int(clip.h * scale))
             else:
-                clip = clip.resize(height=1920)
+                clip = clip.resize(width=int(clip.w * scale), height=int(clip.h * scale))
         except Exception:
             pass
 
-        w, h = clip.size
-        center_x = w // 2
+        # Crop the center to exactly 1080x1920
         try:
+            curr_w, curr_h = clip.size
+            x1 = (curr_w - target_w) // 2
+            y1 = (curr_h - target_h) // 2
             if hasattr(clip, 'crop'):
-                clip = clip.crop(x1=center_x - 540, y1=0, x2=center_x + 540, y2=1920)
+                clip = clip.crop(x1=x1, y1=y1, x2=x1 + target_w, y2=y1 + target_h)
         except Exception:
             pass
 
