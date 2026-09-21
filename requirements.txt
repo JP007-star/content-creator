@@ -1,10 +1,12 @@
 streamlit
+asyncio
 edge-tts
-pytesseract
-moviepy
-pandas
+openai
 python-dotenv
 Pillow
 numpy
 opencv-python-headless
+pytesseract
+moviepy
 requests
+pandas
