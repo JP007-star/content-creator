@@ -193,36 +193,31 @@ def create_video_production(asset_path, audio_path, output_path):
                 clip.duration = audio_clip.duration
 
         # Standardize to 9:16 (1080x1920)
-        # We use "fill" logic: resize to cover the 1080x1920 area, then crop the center
         target_w, target_h = 1080, 1920
 
         try:
-            # Calculate scale to cover target dimensions (aspect fill)
+            # Aspect Fill Logic:
+            # 1. Scale so the smaller dimension fits, larger overflows
             scale = max(target_w / clip.w, target_h / clip.h)
+            new_w = int(clip.w * scale)
+            new_h = int(clip.h * scale)
+
             if hasattr(clip, 'resized'):
-                clip = clip.resized(width=int(clip.w * scale), height=int(clip.h * scale))
+                clip = clip.resized(width=new_w, height=new_h)
             else:
-                clip = clip.resize(width=int(clip.w * scale), height=int(clip.h * scale))
-        except Exception:
-            pass
+                clip = clip.resize(width=new_w, height=new_h)
 
-        # Crop the center to exactly 1080x1920
-        try:
-            # Ensure we are using the latest dimensions after resize
+            # 2. Center Crop exactly to 1080x1920
             curr_w, curr_h = clip.size
-
-            # Calculate the crop area to center the image
-            # x1, y1 is the top-left corner of the crop
-            x1 = max(0, (curr_w - target_w) // 2)
-            y1 = max(0, (curr_h - target_h) // 2)
+            # Calculate start points to keep image perfectly centered
+            x1 = (curr_w - target_w) // 2
+            y1 = (curr_h - target_h) // 2
 
             if hasattr(clip, 'crop'):
-                # MoviePy crop: x1, y1, x2, y2 (or width/height depending on version)
-                # For v2.0+, it usually takes x1, y1, width, height or x1, y1, x2, y2
-                # We'll use the absolute coordinates for clarity
+                # Use absolute coordinates (x1, y1) to (x2, y2)
                 clip = clip.crop(x1=x1, y1=y1, x2=x1 + target_w, y2=y1 + target_h)
-        except Exception:
-            pass
+        except Exception as e:
+            st.error(f"Video formatting error: {e}")
 
         try:
             video = clip.set_audio(audio_clip)
